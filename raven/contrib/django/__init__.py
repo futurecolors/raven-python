@@ -114,9 +114,10 @@ class DjangoClient(Client):
             # legacy ``TemplateSyntaxError.source`` check) which describes template information.
             if hasattr(exc_value, 'django_template_source') or ((isinstance(exc_value, TemplateSyntaxError) and \
                 isinstance(getattr(exc_value, 'source', None), (tuple, list)) and isinstance(exc_value.source[0], LoaderOrigin))):
-                origin, (start, end) = getattr(exc_value, 'django_template_source', exc_value.source)
-                data['__sentry__']['template'] = (origin.reload(), start, end, origin.name)
-                kwargs['view'] = origin.loadname
+                origin, (start, end) = getattr(exc_value, 'django_template_source', getattr(exc_value, 'source', tuple(None, None, None)))
+                if origin:
+                    data['__sentry__']['template'] = (origin.reload(), start, end, origin.name)
+                    kwargs['view'] = origin.loadname
 
             return super(DjangoClient, self).create_from_exception(exc_info, **kwargs)
         finally:
